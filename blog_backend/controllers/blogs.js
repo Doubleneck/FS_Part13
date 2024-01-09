@@ -24,6 +24,15 @@ router.get('/:id', blogFinder, async (req, res) => {
     res.status(404).end()
   }
 })
+
+router.put('/:id', blogFinder, async (req, res) => {
+  if (req.blog) {
+    const blog = await req.blog.update(req.body)
+    res.json(blog)
+  } else {
+    res.status(404).end()
+  }
+})
   
 router.delete('/:id', blogFinder, async (req, res) => {  
   if (req.blog) {
