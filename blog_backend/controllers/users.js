@@ -1,5 +1,5 @@
 const router = require('express').Router()
-
+var validator = require('validator')
 const { User } = require('../models')
 
 router.get('/', async (req, res) => {
@@ -7,7 +7,16 @@ router.get('/', async (req, res) => {
   res.json(users)
 })
 
-router.post('/', async (req, res) => {
+const emailValidator = async (req, res, next) => {
+    const { username } = req.body;
+    if (validator.isEmail(username)) {
+      next();
+    } else {
+      res.status(400).json({ error: 'Invalid email address' });
+    }
+  };
+
+router.post('/', emailValidator, async (req, res) => {
   try {
     const user = await User.create(req.body)
     res.json(user)
@@ -21,7 +30,7 @@ const userFinder = async (req, res, next) => {
     next()
 } 
 
-router.get('/:id', userFinder, async (req, res) => {//onst user = await User.findByPk(req.params.id)
+router.get('/:id', userFinder, async (req, res) => {
   if (req.user) {
     res.json(req.user)
   } else {
