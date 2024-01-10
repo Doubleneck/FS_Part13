@@ -5,21 +5,34 @@ const { tokenExtractor } = require('../util/middleware')
 const { Op } = require('sequelize')
 
 router.get('/', async (req, res) => {
-
-    const blogs = await Blog.findAll({
-        attributes: { exclude: ['userId'] },
-        include: {
-          model: User,
-          attributes: ['name']
-        },
-        where: {
-            title: {
-                [Op.iLike]: `%${req.query.search || ''}%`
+    const where = req.query.search
+      ? {
+          [Op.or]: [
+            {
+              title: {
+                [Op.iLike]: `%${req.query.search}%`
+              }
+            },
+            {
+              author: {
+                [Op.iLike]: `%${req.query.search}%`
+              }
             }
+          ]
         }
-      })
-    res.json(blogs)
-  })
+      : {};
+  
+    const blogs = await Blog.findAll({
+      attributes: { exclude: ['userId'] },
+      include: {
+        model: User,
+        attributes: ['name']
+      },
+      where
+    });
+  
+    res.json(blogs);
+  });
   
 router.post('/', tokenExtractor, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
