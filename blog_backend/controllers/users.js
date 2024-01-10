@@ -37,7 +37,13 @@ const userFinder = async (req, res, next) => {
 
 router.get('/:id', userFinder, async (req, res) => {
   if (req.user) {
-    res.json(req.user)
+    const user = await User.findByPk(req.params.id, {
+        include: {
+            model: Blog,
+            attributes: { exclude: ['userId'] }
+        }
+        })
+    res.json(user)
   } else {
     res.status(404).end()
   }

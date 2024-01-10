@@ -28,7 +28,13 @@ const blogFinder = async (req, res, next) => {
 
 router.get('/:id', blogFinder, async (req, res) => {
   if (req.blog) {
-    res.json(req.blog)
+    const blog = await Blog.findByPk(req.params.id, {
+        include: {
+            model: User,
+            attributes: ['name']
+        }
+        })
+    res.json(blog)
   } else {
     res.status(404).end()
   }
