@@ -1,6 +1,7 @@
 const router = require('express').Router()
 var validator = require('validator')
 const { User, Blog , UserBlogs } = require('../models')
+const { sequelize } = require('../util/db')
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
@@ -36,7 +37,9 @@ const userFinder = async (req, res, next) => {
 } 
 
 router.get('/:id', userFinder, async (req, res) => {
+
   if (req.user) {
+    const { unread } = req.query
     const user = await User.findByPk(req.params.id, {
         attributes: { exclude: ['id','createdAt', 'updatedAt'] },
         include: [{
@@ -49,7 +52,8 @@ router.get('/:id', userFinder, async (req, res) => {
           attributes: { exclude: ['userId','createdAt', 'updatedAt']},
           through: {
             attributes: ['id', 'unread']
-          }
+          },
+          where: unread !== undefined ? { '$markedBlogs->userBlogs.unread$':unread } : {},
         },
       ]
         })
