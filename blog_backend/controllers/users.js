@@ -1,6 +1,6 @@
 const router = require('express').Router()
 var validator = require('validator')
-const { User, Blog } = require('../models')
+const { User, Blog , UserBlogs } = require('../models')
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
@@ -48,17 +48,24 @@ router.get('/:id', userFinder, async (req, res) => {
           as: 'markedBlogs',
           attributes: { exclude: ['userId','createdAt', 'updatedAt']},
           through: {
-            attributes: []
-          },
+            attributes: ['id', 'unread']
+          }
         },
       ]
         })
-
-      const { markedBlogs, ...userWithoutMarkedBlogs } = user.toJSON()
-      const updatedUser = {
-        ...userWithoutMarkedBlogs,
-        readings: markedBlogs
-      }
+        const { markedBlogs, ...userWithoutMarkedBlogs } = user.toJSON();
+        const readings = markedBlogs.map(blog => {
+          const { userBlogs, ...blogWithoutUserBlogs } = blog;
+          return {
+            ...blogWithoutUserBlogs,
+            readinglist: userBlogs,
+          };
+        });
+  
+        const updatedUser = {
+          ...userWithoutMarkedBlogs,
+          readings,
+        };
       res.json(updatedUser)    
     
   } else {

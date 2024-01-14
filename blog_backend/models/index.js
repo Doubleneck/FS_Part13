@@ -8,6 +8,7 @@ Blog.belongsTo(User)
 User.belongsToMany(Blog, { through: UserBlogs, as: 'markedBlogs' })
 Blog.belongsToMany(User, { through: UserBlogs, as: 'usersMarked' })
 
+
 module.exports = {
   Blog,
   User,
