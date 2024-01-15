@@ -1,12 +1,48 @@
 const jwt = require('jsonwebtoken')
 const { SECRET } = require('../util/config')
+const { User, Session } = require('../models')
 
-const tokenExtractor = (req, res, next) => {
+
+const sessionExtractor = async (req, res, next) => {
+  const authorization = req.get('authorization')
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    try {
+      const session = await Session.findOne({
+        where: {
+          token: authorization.substring(7)
+        }
+      })
+      if (!session) {
+        return res.status(401).json({ error: 'not valid session' })
+      }
+    } catch (error){
+      console.log(error)
+      return res.status(401).json({ error: 'not valid session' })
+    }
+  }
+  next()
+}
+
+
+const tokenExtractor = async (req, res, next) => {
   const authorization = req.get('authorization')
     if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+      
       try {
         console.log(authorization.substring(7))
         req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
+        const user = await User.findOne({
+          where: {
+              id: req.decodedToken.id
+          }   
+        })
+        console.log(user)
+        if (user.disabled) {
+            return response.status(401).json({
+              error: 'user disabled'
+            })
+          }
+
       } catch (error){
         console.log(error)
         return res.status(401).json({ error: 'token invalid' })
@@ -35,5 +71,6 @@ const unknownEndpoint = (request, response) => {
 module.exports = {
     errorHandler,
     unknownEndpoint,
-    tokenExtractor 
+    tokenExtractor ,
+    sessionExtractor
 }

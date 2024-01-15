@@ -1,7 +1,7 @@
 const router = require('express').Router()
 
 const { Blog, User } = require('../models')
-const { tokenExtractor } = require('../util/middleware')
+const { tokenExtractor, sessionExtractor } = require('../util/middleware')
 const { Op } = require('sequelize')
 
 router.get('/', async (req, res) => {
@@ -35,8 +35,13 @@ router.get('/', async (req, res) => {
     res.json(blogs);
   });
   
-router.post('/', tokenExtractor, async (req, res) => {
+router.post('/', tokenExtractor, sessionExtractor, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
+  
+  if (!user){
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
   const blog= await Blog.create({...req.body, userId: user.id, date: new Date()})
   res.json(blog)
 })
